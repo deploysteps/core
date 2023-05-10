@@ -248,7 +248,7 @@ export const installVim = () => ({
 
 ## Pipelines
 
-The point of DeploySteps, and ISaaC in general, is to commit your infrastructure scripts into a git repo, and have actions trigger through the CI/CD pipelines.
+The point of DeploySteps, and IaC (infrastructure as code) in general, is to commit your infrastructure scripts into a git repo, and have actions trigger through the CI/CD pipelines.
 
 GitHub Actions provide a powerful and flexible way to automate your deployment workflows. By integrating DeploySteps with GitHub Actions, you can automatically execute your server management tasks whenever changes are pushed to your repository.
 
