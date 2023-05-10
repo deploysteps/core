@@ -110,14 +110,14 @@ const servers = [
   {
     host: '192.168.1.100',
     port: 2222,
-    username: 'popos',
+    username: 'myAccount',
     password: 'Password@12345',
     privateKey: process.env.SERVER_PRIVATE_KEY,
     tasks: [
       updateDebian(),
       syncUsers(users),
       enforceSshPublicKeyOnly(),
-      copy('./stacks/example-voting-app', '/tmp/testStacks/example-voting-app', { clean: true }),
+      copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true }),
     ]
   }
 ];
