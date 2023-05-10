@@ -1,6 +1,10 @@
 {
   "name": "@deploysteps/core",
   "version": "1.0.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "description": "A simple and flexible ISaaC library that allows you to automate various tasks in your server management workflow",
   "main": "lib/index.js",
