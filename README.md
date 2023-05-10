@@ -196,11 +196,7 @@ Iterate over your list of servers and create an SSH connection for each server. 
 for (const server of servers)
   const connection = await createSshConnection({
     ip: server.host,
-    username: server.username,
-    password: server.password,
-    port: server.port,
-    otpSecret: server.otpSecret,
-    privateKey: server.privateKey
+    // ...
   });
 
   for (const task of server.tasks) {
@@ -263,3 +259,36 @@ copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-a
 ```
 
 With the DeploySteps library, you can create custom tasks tailored to your specific needs, allowing for a more versatile and adaptable server management experience. By combining these tasks in various ways, you can create complex and powerful workflows that simplify your devops operations.
+
+## Custom tasks
+
+You can create your own tasks anywhere you like, but in this example we'll just keep it with the code.
+
+This is how a `installVim` script could be implemented.
+
+```javascript
+import kleur from "kleur";
+
+export const installVim = () => async (connection) => {
+  console.log(kleur.magenta('tsk:'), 'installVim');
+  await connection.exec(`
+    sudo apt-get -qy update
+    sudo apt-get -qy install vim
+  `);
+};
+```
+
+Then you can add this to your script.
+
+```javascript
+const servers = [
+  {
+    host: '192.168.1.100',
+    // ...
+    tasks: [
+      updateDebian(),
+      installVim()
+    ]
+  }
+];
+```
