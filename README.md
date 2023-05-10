@@ -60,6 +60,7 @@ const users = [
 
 const servers = [
   {
+    name: 'My Server',
     host: '192.168.1.100',
     port: 22,
     username: 'myAccount',
@@ -105,6 +106,7 @@ const users = [
 
 Create a list of servers you want to manage. Each server object should contain the following properties:
 
+- `name`: A friendly name to use for logging.
 - `host`: The server's IP address or hostname.
 - `port`: The server's SSH port.
 - `username`: The username used to connect to the server.
@@ -117,6 +119,7 @@ Example:
 ```javascript
 const servers = [
   {
+    name: 'My Server',
     host: '192.168.1.100',
     port: 22,
     username: 'user1',
@@ -314,6 +317,7 @@ In your `sync.js` script, replace the file reading operations for private and pu
 ```javascript
 const servers = [
   {
+    name: 'My Server',
     host: '192.168.1.100',
     port: 22,
     username: 'myAccount',
