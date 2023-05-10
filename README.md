@@ -1,0 +1,178 @@
+# DeploySteps
+
+DeploySteps is a simple and flexible ISaaC library that allows you to automate various tasks in your server management workflow. By providing a simple and intuitive API, DeploySteps enables you to create reusable and idempotent tasks that can be run on multiple servers with ease.
+
+## Table of Contents
+
+- [Concept](#concept)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Users Configuration](#users-configuration)
+  - [Servers Configuration](#servers-configuration)
+  - [Tasks](#tasks)
+  - [Executing Tasks](#executing-tasks)
+- [Available Tasks](#available-tasks)
+  - [updateDebian](#updatedebian)
+  - [syncUsers](#syncusers)
+  - [enforceSshPublicKeyOnly](#enforcesshpublickeyonly)
+  - [copy](#copy)
+
+## Concept
+
+The core concept of DeploySteps is to create a list of tasks that you want to execute on your servers. These tasks are defined as reusable and idempotent functions that can be executed on your target servers. This ensures that running the same task multiple times will not cause any unintended side effects.
+
+## Installation
+
+Install DeploySteps by running the following command in your project directory:
+
+```bash
+npm install --save @deploysteps/core
+```
+
+## Usage
+
+To use DeploySteps, you'll need to create a script that defines a set of servers and task you want to run.
+
+### Users Configuration
+
+Create a list of users you want to manage on your servers. Each user object should contain the following properties:
+
+- `username`: The user's username.
+- `password`: The user's password.
+- `publicKeys`: An array of the user's public SSH keys.
+- `groups`: An array of the groups the user should belong to.
+
+Example:
+
+```javascript
+const users = [
+  {
+    username: 'user1',
+    password: 'Password@12345',
+    publicKeys: [
+      fs.readFileSync('/Users/user1/.ssh/id_rsa.pub', 'utf8')
+    ],
+    groups: ['sudo']
+  }
+];
+```
+
+### Servers Configuration
+
+Create a list of servers you want to manage. Each server object should contain the following properties:
+
+- `host`: The server's IP address or hostname.
+- `port`: The server's SSH port.
+- `username`: The username used to connect to the server.
+- `password`: The password used to connect to the server.
+- `privateKey`: The private SSH key used to connect to the server.
+- `tasks`: An array of tasks to be executed on the server.
+
+Example:
+
+```javascript
+const servers = [
+  {
+    host: '192.168.1.100',
+    port: 22,
+    username: 'user1',
+    password: 'Password@12345',
+    privateKey: fs.readFileSync('/Users/myAccount/.ssh/id_rsa', 'utf8'),
+    tasks: [
+      updateDebian(),
+      syncUsers(users),
+      enforceSshPublicKeyOnly(),
+      copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true }),
+    ]
+  }
+];
+```
+
+### Tasks
+
+Import the tasks you want to use from the `@deploysteps/core` package:
+
+```javascript
+import {
+  copy,
+  enforceSshPublicKeyOnly,
+  syncUsers,
+  updateDebian
+} from '@deploysteps/core';
+```
+
+### Executing Tasks
+
+Iterate over your list of servers and create an SSH connection for each server. Then, execute the tasks on the server and close the connection when done.
+
+```javascript
+for (const server of servers)
+  const connection = await createSshConnection({
+    ip: server.host,
+    username: server.username,
+    password: server.password,
+    port: server.port,
+    otpSecret: server.otpSecret,
+    privateKey: server.privateKey
+  });
+
+  for (const task of server.tasks) {
+    await task(connection);
+  }
+
+  connection.close();
+}
+```
+
+## Available Tasks
+
+DeploySteps provides several built-in tasks that you can use to automate your server management:
+
+### updateDebian
+
+The `updateDebian()` task updates the package list and upgrades installed packages on Debian-based systems.
+
+Usage:
+
+```javascript
+updateDebian()
+```
+
+### syncUsers
+
+The `syncUsers(users)` task synchronizes the given list of users on the server, ensuring that each user exists with the specified properties.
+
+- `users`: An array of user objects as defined in the [Users Configuration](#users-configuration) section.
+
+Usage:
+
+```javascript
+syncUsers(users)
+```
+
+### enforceSshPublicKeyOnly
+
+The `enforceSshPublicKeyOnly()` task configures the SSH server to only allow public key authentication, disabling password-based authentication.
+
+Usage:
+
+```javascript
+enforceSshPublicKeyOnly()
+```
+
+### copy
+
+The `copy(source, destination, options)` task copies files and directories from the local machine to the remote server.
+
+- `source`: The local path of the file or directory to be copied.
+- `destination`: The remote path where the file or directory should be copied.
+- `options`: An optional object with the following properties:
+  - `clean`: A boolean indicating whether to remove the destination directory before copying (default: `false`).
+
+Usage:
+
+```javascript
+copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true })
+```
+
+With the DeploySteps library, you can create custom tasks tailored to your specific needs, allowing for a more versatile and adaptable server management experience. By combining these tasks in various ways, you can create complex and powerful workflows that simplify your devops operations.
