@@ -34,8 +34,6 @@ npm install --save @deploysteps/core
 
 The point of DeploySteps, and ISaaC in general, is to commit your infrastructure scripts into a git repo, and have actions trigger through the CI/CD pipelines.
 
-## Deploying with GitHub Actions
-
 GitHub Actions provide a powerful and flexible way to automate your deployment workflows. By integrating DeploySteps with GitHub Actions, you can automatically execute your server management tasks whenever changes are pushed to your repository.
 
 To deploy your servers using DeploySteps and GitHub Actions, follow the steps below:
@@ -52,6 +50,9 @@ Add the following YAML configuration to your `deploy.yml` file:
 name: Deploy
 
 on:
+  schedule:
+    # Runs "At 22:00 on every day-of-week from Monday through Friday."
+    - cron: '0 22 * * 1-5'
   push:
     branches:
       - main
@@ -67,19 +68,19 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: 14
+        node-version: 18
 
     - name: Install dependencies
       run: npm ci
 
     - name: Deploy to servers
-      run: node deploy.js
+      run: node sync.js
       env:
         PRIVATE_KEY: ${{ secrets.SERVER_PRIVATE_KEY }}
         USER1_PUBLIC_KEY: ${{ secrets.USER1_PUBLIC_KEY }}
 ```
 
-This configuration sets up a workflow that triggers whenever you push changes to the `main` branch. It checks out your repository, sets up Node.js, installs your dependencies, and runs your `deploy.js` script.
+This configuration sets up a workflow that triggers whenever you push changes to the `main` branch. It checks out your repository, sets up Node.js, installs your dependencies, and runs your `sync.js` script.
 
 ### 3. Configure Secrets
 
@@ -90,34 +91,20 @@ In your GitHub repository, navigate to the **Settings** tab, and then click on *
 - `SERVER_PRIVATE_KEY`: The private SSH key used to connect to your server.
 - `USER1_PUBLIC_KEY`: The public SSH key for the user you want to manage on the server.
 
-### 4. Update the `deploy.js` Script
+### 4. Create the `sync.js` Script
 
-In your `deploy.js` script, replace the file reading operations for private and public keys with the corresponding environment variables provided by GitHub Actions:
+In your `sync.js` script, replace the file reading operations for private and public keys with the corresponding environment variables provided by GitHub Actions:
 
 ```javascript
-const users = [
-  {
-    username: 'user1',
-    password: 'Password@12345',
-    publicKeys: [
-      process.env.USER1_PUBLIC_KEY
-    ],
-    groups: ['sudo']
-  }
-];
-
 const servers = [
   {
     host: '192.168.1.100',
-    port: 2222,
+    port: 22,
     username: 'myAccount',
     password: 'Password@12345',
     privateKey: process.env.SERVER_PRIVATE_KEY,
     tasks: [
-      updateDebian(),
-      syncUsers(users),
-      enforceSshPublicKeyOnly(),
-      copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true }),
+      updateDebian()
     ]
   }
 ];
