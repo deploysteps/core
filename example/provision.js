@@ -1,6 +1,6 @@
 import fs from 'fs';
 import {
-  createSshConnection,
+  run,
 
   copy,
   enforceSshPublicKeyOnly,
@@ -35,19 +35,4 @@ const servers = [
   }
 ];
 
-for (const server of servers) {
-  const connection = await createSshConnection({
-    ip: server.host,
-    username: server.username,
-    password: server.password,
-    port: server.port,
-    otpSecret: server.otpSecret,
-    privateKey: server.privateKey
-  });
-
-  for (const task of server.tasks) {
-    await task(connection);
-  }
-
-  connection.close();
-}
+run(servers);

@@ -120,6 +120,49 @@ With this setup, you can leverage the power of GitHub Actions and DeploySteps to
 
 To use DeploySteps, you'll need to create a script that defines a set of servers and task you want to run.
 
+### Basic example
+
+```javascript
+import fs from 'fs';
+import {
+  run,
+
+  copy,
+  enforceSshPublicKeyOnly,
+  syncUsers,
+  updateDebian
+} from '@deploysteps/core';
+
+const users = [
+  {
+    username: 'user1',
+    password: 'Password@12345',
+    publicKeys: [
+      fs.readFileSync('/Users/user1/.ssh/id_rsa.pub', 'utf8')
+    ],
+    groups: ['sudo']
+  }
+];
+
+const servers = [
+  {
+    host: '192.168.1.100',
+    port: 22,
+    username: 'myAccount',
+    password: 'Password@12345',
+    privateKey: fs.readFileSync('/Users/user1/.ssh/id_rsa', 'utf8'),
+    tasks: [
+      updateDebian(),
+      syncUsers(users),
+      enforceSshPublicKeyOnly(),
+      copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true }),
+    ]
+  }
+];
+
+run(servers);
+```
+
 ### Users Configuration
 
 Create a list of users you want to manage on your servers. Each user object should contain the following properties:
@@ -192,6 +235,14 @@ import {
 
 Iterate over your list of servers and create an SSH connection for each server. Then, execute the tasks on the server and close the connection when done.
 
+A helper `run` function does this for you:
+
+```javascript
+run(servers)
+```
+
+But it essentially does the following:
+
 ```javascript
 for (const server of servers)
   const connection = await createSshConnection({
@@ -200,7 +251,8 @@ for (const server of servers)
   });
 
   for (const task of server.tasks) {
-    await task(connection);
+    console.log('starting', task.name);
+    await task.handler(connection);
   }
 
   connection.close();
@@ -269,26 +321,13 @@ This is how a `installVim` script could be implemented.
 ```javascript
 import kleur from "kleur";
 
-export const installVim = () => async (connection) => {
-  console.log(kleur.magenta('tsk:'), 'installVim');
-  await connection.exec(`
-    sudo apt-get -qy update
-    sudo apt-get -qy install vim
-  `);
-};
-```
-
-Then you can add this to your script.
-
-```javascript
-const servers = [
-  {
-    host: '192.168.1.100',
-    // ...
-    tasks: [
-      updateDebian(),
-      installVim()
-    ]
+export const installVim = () => ({
+  name: 'Install VIM',
+  handler: async (connection) => {
+    await connection.exec(`
+      sudo apt-get -qy update
+      sudo apt-get -qy install vim
+    `);
   }
-];
+});
 ```
