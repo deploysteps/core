@@ -63,6 +63,7 @@ const servers = [
     name: 'My Server',
     host: '192.168.1.100',
     port: 22,
+    otpSecret: 'ABABABABABABABABABABA',
     username: 'myAccount',
     password: 'Password@12345',
     privateKey: fs.readFileSync('/Users/user1/.ssh/id_rsa', 'utf8'),
@@ -109,6 +110,7 @@ Create a list of servers you want to manage. Each server object should contain t
 - `name`: A friendly name to use for logging.
 - `host`: The server's IP address or hostname.
 - `port`: The server's SSH port.
+- `otpSecret`: The secret for generation otp tokens during login.
 - `username`: The username used to connect to the server.
 - `password`: The password used to connect to the server.
 - `privateKey`: The private SSH key used to connect to the server.
@@ -236,8 +238,6 @@ You can create your own tasks anywhere you like, but in this example we'll just 
 This is how a `installVim` script could be implemented.
 
 ```javascript
-import kleur from "kleur";
-
 export const installVim = () => ({
   name: 'Install VIM',
   handler: async (connection) => {
@@ -320,6 +320,7 @@ const servers = [
     name: 'My Server',
     host: '192.168.1.100',
     port: 22,
+    otpSecret: 'ABABABABABABABABABABA',
     username: 'myAccount',
     password: 'Password@12345',
     privateKey: process.env.SERVER_PRIVATE_KEY,
