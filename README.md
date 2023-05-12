@@ -39,44 +39,42 @@ To use DeploySteps, you'll need to create a script that defines a set of servers
 ```javascript
 import fs from 'fs';
 import {
-  run,
+  createSshConnection,
 
   copy,
-  enforceSshPublicKeyOnly,
+  enforceSshOtpAndPublicKeyOnly,
   syncUsers,
   updateDebian
 } from '@deploysteps/core';
 
-const users = [
-  {
-    username: 'user1',
-    password: 'Password@12345',
-    publicKeys: [
-      fs.readFileSync('/Users/user1/.ssh/id_rsa.pub', 'utf8')
-    ],
-    groups: ['sudo']
-  }
-];
+{
+  const users = [
+    {
+      username: 'user1',
+      password: 'Password@12345',
+      privateKey: fs.readFileSync('/Users/user1/.ssh/id_rsa', 'utf8'),
+      publicKeys: [
+        fs.readFileSync('/Users/user1/.ssh/id_rsa.pub', 'utf8')
+      ],
+      groups: ['sudo']
+    }
+  ];
 
-const servers = [
-  {
-    name: 'My Server',
+  const $ = await createSshConnection({
     host: '192.168.1.100',
     port: 22,
-    otpSecret: 'ABABABABABABABABABABA',
-    username: 'myAccount',
-    password: 'Password@12345',
-    privateKey: fs.readFileSync('/Users/user1/.ssh/id_rsa', 'utf8'),
-    tasks: [
-      updateDebian(),
-      syncUsers(users),
-      enforceSshPublicKeyOnly(),
-      copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true }),
-    ]
-  }
-];
+    username: users[0].username,
+    password: users[0].password,
+    otpSecret: users[0].otpSecret,
+    privateKey: users[0].privateKey
+  });
 
-run(servers);
+  await updateDebian($);
+  await syncUsers($, users);
+  await enforceSshOtpAndPublicKeyOnly($);
+  await copy($, './stacks', '/Users/user1/Documents/stacks', { clean: true });
+  await $.close();
+}
 ```
 
 ### Users Configuration
@@ -105,36 +103,27 @@ const users = [
 
 ### Servers Configuration
 
-Create a list of servers you want to manage. Each server object should contain the following properties:
+Create a new SSH connection to a remote host.
 
-- `name`: A friendly name to use for logging.
 - `host`: The server's IP address or hostname.
 - `port`: The server's SSH port.
 - `otpSecret`: The secret for generation otp tokens during login.
 - `username`: The username used to connect to the server.
 - `password`: The password used to connect to the server.
 - `privateKey`: The private SSH key used to connect to the server.
-- `tasks`: An array of tasks to be executed on the server.
 
 Example:
 
 ```javascript
-const servers = [
+createSshConnection(
   {
-    name: 'My Server',
     host: '192.168.1.100',
     port: 22,
     username: 'user1',
     password: 'Password@12345',
-    privateKey: fs.readFileSync('/Users/myAccount/.ssh/id_rsa', 'utf8'),
-    tasks: [
-      updateDebian(),
-      syncUsers(users),
-      enforceSshPublicKeyOnly(),
-      copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true }),
-    ]
+    privateKey: fs.readFileSync('/Users/myAccount/.ssh/id_rsa', 'utf8')
   }
-];
+)
 ```
 
 ### Tasks
@@ -144,7 +133,7 @@ Import the tasks you want to use from the `@deploysteps/core` package:
 ```javascript
 import {
   copy,
-  enforceSshPublicKeyOnly,
+  enforceSshOtpAndPublicKeyOnly,
   syncUsers,
   updateDebian
 } from '@deploysteps/core';
@@ -154,27 +143,11 @@ import {
 
 Iterate over your list of servers and create an SSH connection for each server. Then, execute the tasks on the server and close the connection when done.
 
-A helper `run` function does this for you:
-
-```javascript
-run(servers)
-```
-
-But it essentially does the following:
-
 ```javascript
 for (const server of servers)
-  const connection = await createSshConnection({
-    ip: server.host,
-    // ...
-  });
-
-  for (const task of server.tasks) {
-    console.log('starting', task.name);
-    await task.handler(connection);
-  }
-
-  connection.close();
+  const $ = await createSshConnection(server);
+  await updateDebian($);
+  await $.close();
 }
 ```
 
@@ -189,19 +162,20 @@ The `updateDebian()` task updates the package list and upgrades installed packag
 Usage:
 
 ```javascript
-updateDebian()
+updateDebian($)
 ```
 
 ### syncUsers
 
-The `syncUsers(users)` task synchronizes the given list of users on the server, ensuring that each user exists with the specified properties.
+The `syncUsers($, users)` task synchronizes the given list of users on the server, ensuring that each user exists with the specified properties.
 
+- `$`: An ssh connection object
 - `users`: An array of user objects as defined in the [Users Configuration](#users-configuration) section.
 
 Usage:
 
 ```javascript
-syncUsers(users)
+await syncUsers($, users)
 ```
 
 ### enforceSshPublicKeyOnly
@@ -211,13 +185,16 @@ The `enforceSshPublicKeyOnly()` task configures the SSH server to only allow pub
 Usage:
 
 ```javascript
-enforceSshPublicKeyOnly()
+await enforceSshPublicKeyOnly($)
 ```
+
+- `$`: An ssh connection object
 
 ### copy
 
-The `copy(source, destination, options)` task copies files and directories from the local machine to the remote server.
+The `copy($, source, destination, options)` task copies files and directories from the local machine to the remote server.
 
+- `$`: An ssh connection object
 - `source`: The local path of the file or directory to be copied.
 - `destination`: The remote path where the file or directory should be copied.
 - `options`: An optional object with the following properties:
@@ -226,7 +203,7 @@ The `copy(source, destination, options)` task copies files and directories from 
 Usage:
 
 ```javascript
-copy('./stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true })
+await copy($, './stacks/example-voting-app', '/Users/myAccount/Documents/example-voting-app', { clean: true })
 ```
 
 With the DeploySteps library, you can create custom tasks tailored to your specific needs, allowing for a more versatile and adaptable server management experience. By combining these tasks in various ways, you can create complex and powerful workflows that simplify your devops operations.
@@ -238,15 +215,12 @@ You can create your own tasks anywhere you like, but in this example we'll just 
 This is how a `installVim` script could be implemented.
 
 ```javascript
-export const installVim = () => ({
-  name: 'Install VIM',
-  handler: async (connection) => {
-    await connection.exec(`
-      sudo apt-get -qy update
-      sudo apt-get -qy install vim
-    `);
-  }
-});
+export const installVim = async (connection) => {
+  await connection.exec(`
+    sudo apt-get -qy update
+    sudo apt-get -qy install vim
+  `);
+};
 ```
 
 ## Pipelines
@@ -309,27 +283,6 @@ In your GitHub repository, navigate to the **Settings** tab, and then click on *
 
 - `SERVER_PRIVATE_KEY`: The private SSH key used to connect to your server.
 - `USER1_PUBLIC_KEY`: The public SSH key for the user you want to manage on the server.
-
-### 4. Create the `sync.js` Script
-
-In your `sync.js` script, replace the file reading operations for private and public keys with the corresponding environment variables provided by GitHub Actions:
-
-```javascript
-const servers = [
-  {
-    name: 'My Server',
-    host: '192.168.1.100',
-    port: 22,
-    otpSecret: 'ABABABABABABABABABABA',
-    username: 'myAccount',
-    password: 'Password@12345',
-    privateKey: process.env.SERVER_PRIVATE_KEY,
-    tasks: [
-      updateDebian()
-    ]
-  }
-];
-```
 
 ### 5. Push Your Changes
 
