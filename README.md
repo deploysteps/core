@@ -47,34 +47,32 @@ import {
   updateDebian
 } from '@deploysteps/core';
 
-{
-  const users = [
-    {
-      username: 'user1',
-      password: 'Password@12345',
-      privateKey: fs.readFileSync('/Users/user1/.ssh/id_rsa', 'utf8'),
-      publicKeys: [
-        fs.readFileSync('/Users/user1/.ssh/id_rsa.pub', 'utf8')
-      ],
-      groups: ['sudo']
-    }
-  ];
+const users = [
+  {
+    username: 'user1',
+    password: 'Password@12345',
+    privateKey: fs.readFileSync('/Users/user1/.ssh/id_rsa', 'utf8'),
+    publicKeys: [
+      fs.readFileSync('/Users/user1/.ssh/id_rsa.pub', 'utf8')
+    ],
+    groups: ['sudo']
+  }
+];
 
-  const $ = await createSshConnection({
-    host: '192.168.1.100',
-    port: 22,
-    username: users[0].username,
-    password: users[0].password,
-    otpSecret: users[0].otpSecret,
-    privateKey: users[0].privateKey
-  });
+const $ = await createSshConnection({
+  host: '192.168.1.100',
+  port: 22,
+  username: users[0].username,
+  password: users[0].password,
+  otpSecret: users[0].otpSecret,
+  privateKey: users[0].privateKey
+});
 
-  await updateDebian($);
-  await syncUsers($, users);
-  await enforceSshOtpAndPublicKeyOnly($);
-  await copy($, './stacks', '/Users/user1/Documents/stacks', { clean: true });
-  await $.close();
-}
+await updateDebian($);
+await syncUsers($, users);
+await enforceSshOtpAndPublicKeyOnly($);
+await copy($, './stacks', '/Users/user1/Documents/stacks', { clean: true });
+await $.close();
 ```
 
 ### Users Configuration
@@ -137,18 +135,6 @@ import {
   syncUsers,
   updateDebian
 } from '@deploysteps/core';
-```
-
-### Executing Tasks
-
-Iterate over your list of servers and create an SSH connection for each server. Then, execute the tasks on the server and close the connection when done.
-
-```javascript
-for (const server of servers)
-  const $ = await createSshConnection(server);
-  await updateDebian($);
-  await $.close();
-}
 ```
 
 ## Available Tasks
@@ -231,11 +217,11 @@ GitHub Actions provide a powerful and flexible way to automate your deployment w
 
 To deploy your servers using DeploySteps and GitHub Actions, follow the steps below:
 
-### 1. Create a GitHub Actions Workflow
+### Create a GitHub Actions Workflow
 
 In your repository, create a new directory called `.github/workflows`, if it doesn't already exist. Inside this directory, create a new file called `deploy.yml`. This file will contain the configuration for your GitHub Actions deployment workflow.
 
-### 2. Configure the Workflow
+### Configure the Workflow
 
 Add the following YAML configuration to your `deploy.yml` file:
 
@@ -274,18 +260,3 @@ jobs:
 ```
 
 This configuration sets up a workflow that triggers whenever you push changes to the `main` branch. It checks out your repository, sets up Node.js, installs your dependencies, and runs your `sync.js` script.
-
-### 3. Configure Secrets
-
-Sensitive information, such as private keys and public keys, should not be stored directly in your repository. Instead, you should use [GitHub Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets) to securely store this information.
-
-In your GitHub repository, navigate to the **Settings** tab, and then click on **Secrets**. Add the following secrets:
-
-- `SERVER_PRIVATE_KEY`: The private SSH key used to connect to your server.
-- `USER1_PUBLIC_KEY`: The public SSH key for the user you want to manage on the server.
-
-### 5. Push Your Changes
-
-Commit and push your changes to the `main` branch. GitHub Actions will now automatically execute your deployment workflow whenever you push changes to your repository.
-
-With this setup, you can leverage the power of GitHub Actions and DeploySteps to automate your server management tasks, ensuring your servers stay up-to-date and secure with every push.
