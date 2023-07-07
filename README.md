@@ -75,6 +75,9 @@ await copy($, './stacks', '/Users/user1/Documents/stacks', { clean: true });
 await $.close();
 ```
 
+### Extra
+- [@deploysteps/docker](https://github.com/deploysteps/docker)
+
 ### Users Configuration
 
 Create a list of users you want to manage on your servers. Each user object should contain the following properties:
@@ -143,12 +146,32 @@ DeploySteps provides several built-in tasks that you can use to automate your se
 
 ### updateDebian
 
-The `updateDebian()` task updates the package list and upgrades installed packages on Debian-based systems.
+The `updateDebian($)` task updates the package list and upgrades installed packages on Debian-based systems.
 
 Usage:
 
 ```javascript
 updateDebian($)
+```
+
+### createDirectory
+
+The `createDirectory($, destination)` task ensures a directory exists.
+
+Usage:
+
+```javascript
+createFile($, '/tmp/test');
+```
+
+### createFile
+
+The `createFile($, destination, data)` task creates/overwrites a file with some content.
+
+Usage:
+
+```javascript
+createFile($, '/tmp/test/file.txt', 'Hello World');
 ```
 
 ### syncUsers
