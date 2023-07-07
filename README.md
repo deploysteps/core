@@ -13,6 +13,8 @@ DeploySteps is a simple and flexible ISaaC library that allows you to automate v
   - [Executing Tasks](#executing-tasks)
 - [Available Tasks](#available-tasks)
   - [updateDebian](#updatedebian)
+  - [createDirectory](#createDirectory)
+  - [createFile](#createFile)
   - [syncUsers](#syncusers)
   - [enforceSshPublicKeyOnly](#enforcesshpublickeyonly)
   - [copy](#copy)
@@ -136,7 +138,9 @@ import {
   copy,
   enforceSshOtpAndPublicKeyOnly,
   syncUsers,
-  updateDebian
+  updateDebian,
+  createDirectory,
+  createFile
 } from '@deploysteps/core';
 ```
 
