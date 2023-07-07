@@ -165,7 +165,7 @@ The `createDirectory($, destination)` task ensures a directory exists.
 Usage:
 
 ```javascript
-createFile($, '/tmp/test');
+createDirectory($, '/tmp/test');
 ```
 
 ### createFile
