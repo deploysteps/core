@@ -80,6 +80,15 @@ await $.close();
 ### Extra
 - [@deploysteps/docker](https://github.com/deploysteps/docker)
 
+### Executing commands
+The `$.exec(command, options, onData)` method allows you to run a command on the server:
+
+- `command`: A string containing the command you want to run
+- `options`: An optional object
+- `options.env`: An optional object containing a key-value pair of environment variables
+- `onData`: A callback when any data is received
+
+
 ### Users Configuration
 
 Create a list of users you want to manage on your servers. Each user object should contain the following properties:
