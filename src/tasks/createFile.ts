@@ -6,7 +6,7 @@ export type CreateFileOptions = {
   chmod?: number | string;
 };
 
-export const createFile = async (connection: Connection, destination: string, data: string, options: CreateFileOptions) => {
+export const createFile = async (connection: Connection, destination: string, data: string, options?: CreateFileOptions) => {
   options = {
     ...options
   }
