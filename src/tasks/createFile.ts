@@ -1,7 +1,12 @@
 import path from 'path';
 import kleur from 'kleur'
+import { Connection } from '../utils/createSshConnection.js';
 
-export const createFile = async (connection, destination, data, options) => {
+export type CreateFileOptions = {
+  chmod?: number | string;
+};
+
+export const createFile = async (connection: Connection, destination: string, data: string, options: CreateFileOptions) => {
   options = {
     ...options
   }
@@ -17,7 +22,7 @@ export const createFile = async (connection, destination, data, options) => {
 
       const writeStream = sftp.createWriteStream(destination);
 
-      writeStream.on('error', (err) => {
+      writeStream.on('error', (err: Error) => {
         reject(Object.assign(new Error(`Error writing remote file`), {
           cause: err,
           destination

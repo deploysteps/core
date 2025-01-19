@@ -6,3 +6,4 @@ export { createDirectory } from './tasks/createDirectory.js';
 export { createFile } from './tasks/createFile.js';
 
 export { createSshConnection } from './utils/createSshConnection.js';
+export { Connection } from './utils/createSshConnection.js';

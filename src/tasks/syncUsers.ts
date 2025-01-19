@@ -1,4 +1,19 @@
-const syncPublicKeys = async (connection, username, publicKeys, otpSecret) => {
+import { Connection } from "../utils/createSshConnection.js";
+
+interface User {
+  username: string;
+  password: string;
+  groups: string[];
+  publicKeys?: string[];
+  otpSecret?: string;
+}
+
+const syncPublicKeys = async (
+  connection: Connection,
+  username: string,
+  publicKeys: string[],
+  otpSecret?: string
+): Promise<void> => {
   if (!publicKeys || publicKeys.length === 0) {
     return;
   }
@@ -14,7 +29,7 @@ const syncPublicKeys = async (connection, username, publicKeys, otpSecret) => {
     // Check if the public key already exists in the authorized_keys file
     const keyExists = await connection.exec(`
       sudo grep -qF '${publicKey}' /home/${username}/.ssh/authorized_keys
-    `).catch(error => {
+    `).catch((error: Error) => {
       return false;
     });
 
@@ -40,13 +55,17 @@ const syncPublicKeys = async (connection, username, publicKeys, otpSecret) => {
   `);
 };
 
-const setupAuthenticator = async (connection, username, otpSecret) => {
+const setupAuthenticator = async (
+  connection: Connection,
+  username: string,
+  otpSecret: string
+): Promise<void> => {
   if (!otpSecret) {
     return;
   }
 
   // Define the google_authenticator configuration
-  const googleAuthenticatorConfig = `
+  const googleAuthenticatorConfig: string = `
 ${otpSecret}
 " RATE_LIMIT 3 30
 " WINDOW_SIZE 3
@@ -64,10 +83,12 @@ ${otpSecret}
   `);
 };
 
-
-export const syncUsers = async (connection, users) => {
+export const syncUsers = async (
+  connection: Connection,
+  users: User[]
+): Promise<void> => {
   for (const user of users) {
-    const userExists = await connection.exec(`
+    const userExists: string = await connection.exec(`
       id -u ${user.username} >/dev/null 2>&1; echo $?
     `);
 
@@ -81,7 +102,7 @@ export const syncUsers = async (connection, users) => {
       `);
     }
 
-    const groupsString = user.groups.join(',');
+    const groupsString: string = user.groups.join(',');
     await connection.exec(`
       sudo usermod -aG ${groupsString} ${user.username}
     `);

@@ -1,4 +1,6 @@
-const ensureSettingValue = (file, key, value) => async (connection) => {
+import { Connection } from "../utils/createSshConnection.js";
+
+const ensureSettingValue = (file: string, key: string, value: string) => async (connection: Connection) => {
   await connection.script(`
     #!/bin/bash
 
@@ -17,7 +19,7 @@ const ensureSettingValue = (file, key, value) => async (connection) => {
   `);
 };
 
-export const enforceSshOtpAndPublicKeyOnly = async (connection) => {
+export const enforceSshOtpAndPublicKeyOnly = async (connection: Connection) => {
   await ensureSettingValue('/etc/ssh/sshd_config', 'PasswordAuthentication', 'no')(connection);
   await ensureSettingValue('/etc/ssh/sshd_config', 'ChallengeResponseAuthentication', 'yes')(connection);
   await ensureSettingValue('/etc/ssh/sshd_config', 'KbdInteractiveAuthentication', 'yes')(connection);
